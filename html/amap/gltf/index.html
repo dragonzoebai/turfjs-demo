@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>江阴水务高德demo-3D小部件</title>
+    <style>
+		html,body,#container {
+			margin:0;
+			height: 100%;
+		}
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<script src="https://webapi.amap.com/maps?v=1.4.15&key=aafaa3ac90c4c7dd7aa48eb587a5c66f&plugin=AMap.ToolBar,AMap.MouseTool,AMap.DistrictSearch,AMap.ControlBar,AMap.GltfLoader"></script>
+<script>
+	var map; //地图对象
+	var controlBar; //控制器
+	var object3Dlayer; //3D图层
+	var mapZoomDefault = 18; //地图默认级别
+	var mapcenterDefault = [120.275508 , 31.935517]; //地图默认中心点
+	var mapPitchDefault = 45; //地图默认俯视角度
+	var mapRotationDefault = -30; //地图默认旋转角度
+	
+	initMap();
+	
+	var meshObjArr =  [];
+	
+	/**
+	 * 高德地图初始化
+	 */
+	function initMap(){
+		map = new AMap.Map('container', {
+			zooms: [12,20],
+			zoom: mapZoomDefault, // 初始化地图层级
+			center: mapcenterDefault, // 初始化地图中心点
+			pitch: mapPitchDefault, //俯视
+			rotation: mapRotationDefault, //旋转
+			resizeEnable: true,
+			rotateEnable:true,
+			pitchEnable:true,
+			viewMode: '3D', // 使用3D视图
+			mapStyle: 'amap://styles/0b7f2aecffe8113ba5f3ebe55c8a1b45'//小娇
+		})
+		//地图初始化完成事件
+		.on('complete',function(){
+			map.addControl(controlBar); //添加控制器
+			
+			//
+			object3Dlayer = new AMap.Object3DLayer();
+			map.add(object3Dlayer);
+			//获取环境光
+			map.AmbientLight = new AMap.Lights.AmbientLight([1,1,1],0.5);
+			//获取平行光
+			map.DirectionLight = new AMap.Lights.DirectionLight([-6,-2,14],[1,1,1],0.5);
+			
+			
+			add3DModel(); //添加3D模型
+		})
+		//地图缩放事件
+		.on('zoomchange', function(e) {
+		})
+		//地图点击事件
+		.on('click', function(e) {
+			//console.log(e.lnglat);
+		})
+	}
+	
+	//初始化控制器
+	controlBar = new AMap.ControlBar({
+		showZoomBar:true,
+		showControlButton:true,
+		position:{
+			right:'10px',
+			top:'10px'
+		}
+	});
+	
+	//添加3D模型
+	function add3DModel(){
+		var gltf = new AMap.GltfLoader();
+		
+		var sluiceUrl = "sluice.gltf";
+		var sluiceOption = {
+			position: new AMap.LngLat(120.276481, 31.935317),
+			scale: 0.3,
+			height: 0,
+			scene: 0
+		}
+		gltf.load(sluiceUrl, function( sluiceObj ){
+			meshObjArr.push({
+				obj: sluiceObj,
+				name: "闸门"
+			});
+			sluiceObj.setOption(sluiceOption);
+			sluiceObj.rotateX(90);
+			object3Dlayer.add(sluiceObj);
+		})
+	}
+	
+	// 给gltf模型绑定事件
+	map.on('click', function (ev) {
+		var pixel = ev.pixel;
+		var px = new AMap.Pixel(pixel.x, pixel.y);
+		var obj = map.getObject3DByContainerPos(px, [object3Dlayer], false) || {};
+		if (obj && obj.object) {
+			var meshId = obj.object.id;
+			for (var i = 0; i < meshObjArr.length; i++) {
+				var meshObj = meshObjArr[i].obj;
+				if(meshObj && meshObj.layerMesh){
+					for(var j = 0; j < meshObj.layerMesh.length; j++) {
+						if(meshId === meshObj.layerMesh[j].id){
+							console.info(meshObjArr[i].name);
+						}
+					}
+				}
+			}
+			
+		}
+	});
+</script>
+</body>
+</html>

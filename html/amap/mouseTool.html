@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+	<head>
+		<!-- https://lbs.amap.com/demo/javascript-api/example/mouse-operate-map/mouse-draw-overlayers -->
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+		<title>鼠标绘制</title>
+		<style>
+			html,
+			body,
+			#container {
+				margin: 0;
+				height: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="container"></div>
+		<script
+			src="https://webapi.amap.com/maps?v=1.4.15&key=aafaa3ac90c4c7dd7aa48eb587a5c66f&plugin=AMap.ToolBar,AMap.MouseTool,AMap.DistrictSearch,AMap.ControlBar,AMap.GltfLoader,AMap.MouseTool">
+		</script>
+		<script>
+			var map; //地图对象
+			var controlBar; //控制器
+
+			var mapZoomDefault = 15; //地图默认级别
+			var mapcenterDefault = [120.283654, 31.89038]; //地图默认中心点
+			var mapPitchDefault = 45; //地图默认俯视角度
+			var mapRotationDefault = 0; //地图默认旋转角度
+
+			initMap();
+
+			/**
+			 * 高德地图初始化
+			 */
+			function initMap() {
+				map = new AMap.Map('container', {
+						//zooms: [16,20],
+						zoom: mapZoomDefault, // 初始化地图层级
+						center: mapcenterDefault, // 初始化地图中心点
+						pitch: mapPitchDefault, //俯视
+						rotation: mapRotationDefault, //旋转
+						animateEnable: true,
+						resizeEnable: true,
+						rotateEnable: true,
+						pitchEnable: true,
+						features: ['bg', 'building'], //'bg','point','road','building'
+						showBuildingBlock: true,
+						viewMode: '3D', // 使用3D视图
+						mapStyle: 'amap://styles/0b7f2aecffe8113ba5f3ebe55c8a1b45' //小娇
+					})
+					//地图初始化完成事件
+					.on('complete', () => {
+						map.addControl(controlBar); //添加控制器
+						
+						// 绘制
+						var mouseTool = new AMap.MouseTool(map);
+						mouseTool.on('draw', (e) => {
+							console.log(e)
+						})
+						mouseTool.marker({
+							icon: new AMap.Icon({
+								size: new AMap.Size(40, 40),
+								imageSize: new AMap.Size(40, 40),
+								image: "./images/lbs.png"
+							}),
+							offset: new AMap.Pixel(-20, -20),
+						});
+					})
+					//地图缩放事件
+					.on('zoomchange', (e) => {
+						var mapZoom = map.getZoom();
+						console.log(mapZoom)
+					})
+					//地图点击事件
+					.on('click', function(e) {
+						console.log(e.lnglat);
+					})
+			}
+
+			//初始化控制器
+			controlBar = new AMap.ControlBar({
+				showZoomBar: true,
+				showControlButton: true,
+				position: {
+					right: '10px',
+					top: '10px'
+				}
+			});
+		</script>
+	</body>
+</html>

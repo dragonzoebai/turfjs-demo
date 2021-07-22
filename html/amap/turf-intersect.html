@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>地图显示</title>
+    <style>
+        *{
+			padding:0;
+			margin:0
+		}
+        #container {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+        }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<!-- 加载地图JSAPI脚本 -->
+<script src="https://webapi.amap.com/maps?v=1.4.15&key=d674d4dcc99589daceb1920426158822"></script>
+<script src='https://api.mapbox.com/mapbox.js/plugins/turf/v2.0.2/turf.min.js'></script>
+<script>
+    var map = new AMap.Map('container', {
+        resizeEnable: true, //是否监控地图容器尺寸变化
+        zoom:13, //初始化地图层级
+        center: [116.40275,39.918841], //初始化地图中心点
+        mapStyle: "amap://styles/whitesmoke"
+    });
+	
+	map.on('click', function showInfoClick(e){
+        var text = '['+e.lnglat.getLng()+','+e.lnglat.getLat()+']'
+        console.log(text);
+    });
+	
+	var poly1 = {
+	  "type": "Feature",
+	  "properties": {
+		"fill": "#0f0",
+		"stroke": "#00f"
+	  },
+	  "geometry": {
+		"type": "Polygon",
+		"coordinates": [[
+		  [116.354169,39.941088],
+		  [116.434507,39.947405],
+		  [116.433134,39.90528],
+		  [116.358976,39.904226],
+		  [116.354169,39.941088]
+		]]
+	  }
+	}
+	var poly2 = {
+	  "type": "Feature",
+	  "properties": {
+		"stroke": "#0f0"
+	  },
+	  "geometry": {
+		"type": "LineString",
+		"coordinates": [
+		  [116.397428,39.89053],
+		  [116.396741,39.923186],
+		  [116.459913,39.92266],
+		  [116.461973,39.890003]
+		]
+	  }
+	}
+
+	var polygons = {
+	  "type": "FeatureCollection",
+	  "features": [poly1, poly2]
+	};
+
+	var intersection = turf.intersect(poly1, poly2);
+	intersection.properties['stroke'] = '#ff0000';
+	polygons.features.push(intersection);
+	console.log(polygons);
+	
+	var geojson = new AMap.GeoJSON({
+		geoJSON: polygons,
+		// 还可以自定义getMarker和getPolyline
+		getPolyline: function(geojson, lnglats) {
+			return new AMap.Polyline({
+				path: lnglats,
+				strokeColor: geojson.properties.stroke,
+				strokeWeight: 5
+			});
+		},
+		getPolygon: function(geojson, lnglats) {
+			return new AMap.Polygon({
+				path: lnglats,
+				fillOpacity: 0.5,// 面积越大透明度越高
+				strokeColor: geojson.properties.stroke,
+				fillColor: geojson.properties.fill
+			});
+		}
+	});
+	map.add(geojson);	
+</script>
+</body>
+</html>

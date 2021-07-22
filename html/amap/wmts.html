@@ -1,0 +1,95 @@
+
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+		<title>江阴wmts</title>
+		<style>
+			html,
+			body,
+			#container {
+				margin: 0;
+				height: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="container"></div>
+		<script
+			src="https://webapi.amap.com/maps?v=1.4.15&key=aafaa3ac90c4c7dd7aa48eb587a5c66f&plugin=AMap.ToolBar,AMap.MouseTool,AMap.DistrictSearch,AMap.ControlBar,AMap.GltfLoader">
+		</script>
+		<script>
+			var map; //地图对象
+			var controlBar; //控制器
+
+			var mapZoomDefault = 12; //地图默认级别
+			var mapcenterDefault = [120.283654, 31.89038]; //地图默认中心点
+			var mapPitchDefault = 0; //地图默认俯视角度
+			var mapRotationDefault = 0; //地图默认旋转角度
+
+			initMap();
+
+			/**
+			 * 高德地图初始化
+			 */
+			function initMap() {
+				map = new AMap.Map('container', {
+						//zooms: [16,20],
+						zoom: mapZoomDefault, // 初始化地图层级
+						center: mapcenterDefault, // 初始化地图中心点
+						pitch: mapPitchDefault, //俯视
+						rotation: mapRotationDefault, //旋转
+						animateEnable: true,
+						resizeEnable: true,
+						rotateEnable: true,
+						pitchEnable: true,
+						features: ['bg', 'road'], //'bg','point','road','building'
+						showBuildingBlock: false,
+						viewMode: '3D', // 使用3D视图
+						mapStyle: 'amap://styles/0b7f2aecffe8113ba5f3ebe55c8a1b45' //小娇
+					})
+					//地图初始化完成事件
+					.on('complete', function() {
+						// map.add(wmtsLayer);
+						map.addControl(controlBar); //添加控制器
+					})
+					//地图缩放事件
+					.on('zoomchange', function(e) {
+						var mapZoom = map.getZoom();
+						console.log(mapZoom)
+					})
+					//地图点击事件
+					.on('click', function(e) {
+						console.log(e.lnglat);
+					})
+			}
+
+			//初始化控制器
+			controlBar = new AMap.ControlBar({
+				showZoomBar: true,
+				showControlButton: true,
+				position: {
+					right: '10px',
+					top: '10px'
+				}
+			});
+			
+			// wms图层
+			// 加载不了geoserver的，构造成的url参数TileMatrix缺少EPSG信息
+			var wmtsLayer = new AMap.TileLayer.WMTS({
+				url: 'https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/WMTS/',
+				blend: false,
+				tileSize: 256,
+				params: {
+					Layer: '0',
+					// Version: '1.0.0',
+					// Format: 'image/png',
+					// TileMatrixSet: 'EPSG:3857'
+				}
+			});
+			wmtsLayer.setMap(map);
+		</script>
+	</body>
+</html>

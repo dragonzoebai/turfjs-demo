@@ -1,0 +1,222 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>地图遮罩</title>
+    <style>
+		html,body,#container {
+			margin:0;
+			height: 100%;
+		}
+    </style>
+</head>
+<body>
+<div id="container"></div>
+
+<div style='position: absolute;top: 0;left: 0;background-color: #fff;'>
+	<button onclick="measureDic()">距离测量</button>
+	<button onclick="measureArea()">距离测量</button>
+	<button onclick="measureClose()">关闭</button>
+</div>
+	
+<script src="https://webapi.amap.com/maps?v=1.4.15&key=fb7c97fa026a024f66cc7e3479102a4b&plugin=AMap.ToolBar,AMap.MouseTool,AMap.DistrictSearch"></script>
+<script src="js/county.js"></script>
+<script src="js/town.js"></script>
+<script>
+	/**
+	 * 高德地图初始化
+	 */
+    var map = new AMap.Map('container', {
+		resizeEnable: true,
+		zooms: [7,20],
+		zoom: 10,
+		center:[110.968923,27.327459],
+		layers:[
+			new AMap.TileLayer.RoadNet({
+				zIndex:20
+			})
+		]
+	});
+	
+	//设置地图限制范围(southwest,northeast)
+	var bound = new AMap.Bounds([103.897848,24.484868],[119.587697,30.294854])
+	map.setLimitBounds(bound);
+	
+	//工具条，控制地图的缩放、平移等
+	var toolBar = new AMap.ToolBar({
+		// 简易缩放模式，默认为 false
+		liteStyle: true
+		//ruler: false,
+		//direction: false
+	})
+	map.addControl(toolBar);
+	
+	var mouseTool = new AMap.MouseTool(map);
+	//测量距离
+	function measureDic(){
+		mouseTool.rule({
+			startMarkerOptions : {//可缺省
+				icon: new AMap.Icon({
+					size: new AMap.Size(19, 31),//图标大小
+					imageSize:new AMap.Size(19, 31),
+					image: "https://webapi.amap.com/theme/v1.3/markers/b/start.png"
+				})
+			},
+			endMarkerOptions : {//可缺省
+				icon: new AMap.Icon({
+					size: new AMap.Size(19, 31),//图标大小
+					imageSize:new AMap.Size(19, 31),
+					image: "https://webapi.amap.com/theme/v1.3/markers/b/end.png"
+				}),
+				offset: new AMap.Pixel(-9, -31)
+			},
+			midMarkerOptions : {//可缺省
+				icon: new AMap.Icon({
+					size: new AMap.Size(19, 31),//图标大小
+					imageSize:new AMap.Size(19, 31),
+					image: "https://webapi.amap.com/theme/v1.3/markers/b/mid.png"
+				}),
+				offset: new AMap.Pixel(-9, -31)
+			},
+			lineOptions : {//可缺省
+				strokeStyle: "solid",
+				strokeColor: "#FF33FF",
+				strokeOpacity: 1,
+				strokeWeight: 2
+			}
+			//同 RangingTool 的 自定义 设置，缺省为默认样式
+			
+		});
+	}
+	//测量面积
+	function measureArea(){
+		mouseTool.measureArea({
+			strokeColor:'#80d8ff',
+			fillColor:'#80d8ff',
+			fillOpacity:0.3
+		  //同 Polygon 的 Option 设置
+		});
+	}
+	//关闭测量
+	function measureClose(){
+		mouseTool.close(true)//关闭，并清除覆盖物
+	}
+	
+	/**
+	 * 高德自有省界-遮罩
+	 */
+	function districtProvince(){
+		new AMap.DistrictSearch({
+		    extensions:'all', //all，返回完整行政区边界坐标点
+		    subdistrict:0 //0：不返回下级行政区
+		}).search('湖南省',function(status,result){
+		    // 外多边形坐标数组和内多边形坐标数组
+		    var outer = [
+		        new AMap.LngLat(-360,90,true),
+		        new AMap.LngLat(-360,-90,true),
+		        new AMap.LngLat(360,-90,true),
+		        new AMap.LngLat(360,90,true),
+		    ];
+		    var holes = result.districtList[0].boundaries
+		
+		    var pathArray = [
+		        outer
+		    ];
+		    pathArray.push.apply(pathArray,holes)
+		    var polygon = new AMap.Polygon( {
+		        pathL:pathArray,
+		        strokeColor: '#00eeff',
+		        strokeWeight: 1,
+		        fillColor: '#ffffff',
+		        fillOpacity: 0.9
+		    });
+		    polygon.setPath(pathArray);
+		    map.add(polygon)
+		})
+	}
+	
+	/**
+	 * 高德自有隆回县界
+	 */
+    function districtXian(){
+		new AMap.DistrictSearch({
+		    extensions:'all',
+		    subdistrict:0
+		}).search('隆回县',function(status,result){
+		    var path = result.districtList[0].boundaries
+		    var polygon = new AMap.Polygon( {
+		        path: path,
+		        strokeColor: '#0000ff',
+		        strokeWeight: 2,
+		        fillColor: '#ffffff',
+		        fillOpacity: 0
+		    });
+		    map.add(polygon)
+		})
+	}
+	
+	/**
+	 * 添加县geojson
+	 */
+	function districtXian1(){
+		var geojson = new AMap.GeoJSON({
+			geoJSON: countyGeoData ,
+			// 还可以自定义getMarker和getPolyline
+			getPolygon: function(geojson, lnglats) {
+				return new AMap.Polygon({
+					path: lnglats,
+					strokeColor: '#0000ff',
+					strokeWeight: 2,
+					fillColor: '#ffffff',
+					fillOpacity: 0,// 面积越大透明度越高
+				});
+			}
+		});
+		map.add(geojson)
+	}
+	
+	/**
+	 * 过滤乡geojson
+	 * code为空显示所有乡镇
+	 * code不为空时则过滤显示乡镇
+	 */
+	function districtXiang(code){
+		var geojson = new AMap.GeoJSON({
+			geoJSON: townGeoData ,
+			// 还可以自定义getMarker和getPolyline
+			getPolygon: function(geojson, lnglats) {
+				if(code!=null && geojson.properties.code != code){
+					return;
+				}
+				
+				var polygon = new AMap.Polygon({
+					path: lnglats,
+					strokeColor: '#ff0000',
+					strokeWeight: 2,
+					fillColor: '#ffffff',
+					fillOpacity: 0,// 面积越大透明度越高,
+					extData: geojson.properties
+				});
+				
+				polygon.on('click', function(e){
+					var infoWindow = new AMap.InfoWindow({
+						content: e.target.Ce.extData.乡  //使用默认信息窗体框样式，显示信息内容
+					});
+					infoWindow.open(map, e.lnglat);
+				});
+				return polygon;
+			}
+		});
+		map.add(geojson)
+	}
+	
+	districtProvince();
+	//districtXian();
+	districtXian1();
+	//districtXiang();
+	districtXiang(430524100);
+</script>
+</body>
+</html>

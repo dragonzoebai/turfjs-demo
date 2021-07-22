@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>test1</title>
+    <style>
+		html,body,#container {
+			margin:0;
+			height: 100%;
+		}
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<script src="https://webapi.amap.com/maps?v=1.4.15&key=fb7c97fa026a024f66cc7e3479102a4b&plugin=AMap.ToolBar,AMap.MouseTool,AMap.DistrictSearch"></script>
+<script src="js/county.js"></script>
+<script src="js/town.js"></script>
+<script>
+	/**
+	 * 高德地图初始化
+	 */
+    var map = new AMap.Map('container', {
+		resizeEnable: true,
+		zooms: [7,20],
+		zoom: 10,
+		center:[110.968923,27.327459]
+	});
+	
+	var marker = new AMap.Marker({
+		center: [110.968923,27.327459],
+		label: {
+			content: "content",
+			direction: "top"
+		}
+	});
+	map.add(marker);
+	
+	// 半径为m，随地图缩放改变大小
+	var circle = new AMap.Circle({
+		center: [110.968923,27.327459],
+		radius: 1500, // 圆半径，单位:米
+		strokeColor: "#3366FF", //边框线颜色
+		strokeOpacity: 0.3,       //边框线透明度
+		strokeWeight: 3,        //边框线宽
+		fillColor: "#FFA500", //填充色
+		fillOpacity: 0.35//填充透明度
+	});
+	map.add(circle);
+	
+	// 半径为像素，不随地图缩放改变大小
+	var circleMarker = new AMap.CircleMarker({
+		center: [110.968923,27.327459],
+		radius: 25, // 圆点半径，单位:px
+		strokeColor: "#f00", //边框线颜色
+		strokeOpacity: 0.3,       //边框线透明度
+		strokeWeight: 3,        //边框线宽
+		fillColor: "#0f0", //填充色
+		fillOpacity: 0.35//填充透明度
+	});
+	map.add(circleMarker);
+	
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+		<title>地图切换</title>
+		<style>
+			html,
+			body,
+			#container {
+				margin: 0;
+				height: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="container"></div>
+		<div style="position: absolute;left: 0;top: 0;">
+			<div id="mapDefaultLayerDiv">
+				<button onclick="changeDefaultLayer('satellite',this)" style="cursor: pointer;">卫星图</button>
+				<button onclick="changeDefaultLayer('default',this)" style="cursor: pointer;display: none;">线画图</button>
+			</div>
+			<div id="mapStyleDiv">
+				<button onclick="changeStyle('normal',this)" style="cursor: pointer;">标准样式</button>
+				<button onclick="changeStyle('mystyle',this)" style="cursor: pointer;display: none;">自定义样式</button>
+			</div>
+		</div>
+
+		<script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.10.0/jquery.min.js"></script>
+		<script
+			src="https://webapi.amap.com/maps?v=1.4.15&key=aafaa3ac90c4c7dd7aa48eb587a5c66f&plugin=AMap.ToolBar,AMap.MouseTool,AMap.DistrictSearch,AMap.ControlBar,AMap.GltfLoader">
+		</script>
+		<script>
+			var mapStyles = {
+				"normal": "amap://styles/normal",
+				"mystyle": "amap://styles/0b7f2aecffe8113ba5f3ebe55c8a1b45"
+			}
+			var mapDefaultLayer = {
+				"default": new AMap.TileLayer(), // 线画图
+				"satellite": new AMap.TileLayer.Satellite() // 卫星图
+			}
+
+			//初始化控制器
+			var controlBar = new AMap.ControlBar({
+				showZoomBar: true,
+				showControlButton: true,
+				position: {
+					right: '10px',
+					top: '10px'
+				}
+			});
+
+			/**
+			 * 高德地图初始化
+			 */
+			var map = new AMap.Map('container', {
+					//zooms: [16,20],
+					zoom: 13, // 初始化地图层级
+					center: [120.283654, 31.89038], // 初始化地图中心点
+					layers: [mapDefaultLayer.default],
+					pitch: 0, //俯视
+					rotation: 0, //旋转
+					animateEnable: true,
+					resizeEnable: true,
+					rotateEnable: true,
+					pitchEnable: true,
+					features: ['bg', 'road'], //'bg','point','road','building'
+					showBuildingBlock: false,
+					viewMode: '3D', // 使用3D视图
+					mapStyle: mapStyles.mystyle
+				})
+				//地图初始化完成事件
+				.on('complete', function() {
+					// map.add(wmsLayer);
+					map.addControl(controlBar); //添加控制器
+				})
+				//地图缩放事件
+				.on('zoomchange', function(e) {
+					var mapZoom = map.getZoom();
+					console.log(mapZoom)
+				})
+				//地图点击事件
+				.on('click', function(e) {
+					console.log(e.lnglat);
+				})
+
+			function changeStyle(styleName,obj) {
+				map.setMapStyle(mapStyles[styleName]);
+				$(obj).hide().siblings().show()
+			}
+
+			function changeDefaultLayer(layerName,obj) {
+				map.setDefaultLayer(mapDefaultLayer[layerName])
+				$(obj).hide().siblings().show()
+				if(layerName == "default"){
+					$("#mapStyleDiv").show()
+				}else{
+					$("#mapStyleDiv").hide()
+				}
+			}
+		</script>
+	</body>
+</html>
